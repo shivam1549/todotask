@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="container-fluid" style="    height: 100vh;
+    background: aliceblue;">
+
+
+        <div class="container p-6 mt-2">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4 class="mb-2">To Do List</h4>
+                </div>
+                <div class="col-md-6">
+
+                    <form action="" style="position: sticky; top: 1vw;">
+
+                        <div class="form-group">
+                            <textarea name="" id="task" class="form-control" cols="30" rows="5"></textarea>
+                        </div>
+                        <div class="form-group mt-2">
+                            <button id="savetask" class="btn btn-dark btn-block">Save</button>
+                        </div>
+
+                    </form>
+                </div>
+
+                <div class="col-md-6">
+                    <div id="taskcontainer">
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+</body>
+
+<script>
+
+    var tasksArray = JSON.parse(localStorage.getItem("tasksArr")) || [];
+    console.log(tasksArray)
+    // Display tasks when the page loads
+    tasksArray.forEach(function (task) {
+        var html = "<div class='card mb-3 p-3'>";
+        html += "<p>" + task.task + "</p>";
+        html += "<a href='javascript:void(0)' data-id='" + task.id + "' class='removebtn  text-danger'>remove</a></div>";
+        document.getElementById("taskcontainer").innerHTML += html;
+    });
+
+    var buttonsremove = document.querySelectorAll(".removebtn");
+    buttonsremove.forEach(el => {
+        el.addEventListener("click", function (e) {
+
+
+            var indexToRemove = tasksArray.findIndex(task => task.id === parseInt(el.getAttribute("data-id")));
+            // console.log(indexToRemove)
+            if (indexToRemove !== -1) {
+
+                tasksArray.splice(indexToRemove, 1);
+                localStorage.setItem("tasksArr", JSON.stringify(tasksArray));
+                el.parentNode.remove();
+            }
+        })
+    })
+
+
+    document.getElementById("savetask").addEventListener("click", function (e) {
+        e.preventDefault();
+
+
+        var myobj = {};
+
+        var takVal = document.getElementById("task").value;
+
+        myobj = {
+            id: Math.floor((Math.random() * 100) + 1),
+            task: takVal
+        }
+
+        tasksArray.push(myobj);
+
+        localStorage.setItem("tasksArr", JSON.stringify(tasksArray));
+
+        var html = "";
+        tasksArray.forEach(function (taskfd) {
+            // console.log(taskfd)
+            html += "<div class='card mb-3 p-3'>";
+            html += "<p>" + taskfd.task + "</p>";
+            html += "<a href='javascript:void(0)' data-id='" + taskfd.id + "' class='removebtn text-danger'>remove</a></div>";
+
+        });
+
+        task.value = "";
+
+        document.getElementById("taskcontainer").innerHTML = html;
+        var buttonsremove = document.querySelectorAll(".removebtn");
+        buttonsremove.forEach(el => {
+            el.addEventListener("click", function (e) {
+                console.log(el.getAttribute("data-id"))
+
+                var indexToRemove = tasksArray.findIndex(task => task.id === parseInt(el.getAttribute("data-id")));
+                // console.log(indexToRemove)
+                if (indexToRemove !== -1) {
+
+                    tasksArray.splice(indexToRemove, 1);
+                    localStorage.setItem("tasksArr", JSON.stringify(tasksArray));
+                    el.parentNode.remove();
+                }
+            })
+        })
+
+    })
+
+</script>
+
+
+
+</html>
