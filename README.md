@@ -5,5 +5,6 @@
   <ul>
     <li>Add new tasks</li>
     <li>Delete tasks</li>
+    <li>Drag And Drop Pending and done task</li>
     <li>Tasks are stored locally and persist across page refreshes</li>
   </ul>

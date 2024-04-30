@@ -1,22 +1,35 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Bootstrap demo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-        <style>
-            *{
-                margin: 0;
-                padding: 0;
-            }
-        </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+
+        }
+
+        html {
+            background-color: aliceblue;
+        }
+
+        #divtwo .card {
+            background-color: #cfffcf;
+        }
+
+        #taskcontainer .card {
+            background-color: #ffcfcf;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container-fluid" style="    height: 100vh;
-    background: aliceblue;">
+    <div class="container-fluid" style="background: aliceblue;">
 
 
         <div class="container p-6 mt-2">
@@ -24,7 +37,7 @@
                 <div class="col-md-12">
                     <h4 class="mb-2">To Do List</h4>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
 
                     <form action="" style="position: sticky; top: 1vw;">
 
@@ -33,15 +46,22 @@
                         </div>
                         <div class="form-group mt-2">
                             <button id="savetask" class="btn btn-dark btn-block">Save</button>
+                            <button id="clearall" class="btn btn-outline-dark btn-block">Clear</button>
                         </div>
 
                     </form>
                 </div>
 
-                <div class="col-md-6">
-                    <div id="taskcontainer">
+                <div class="col-md-4">
+                    <div id="taskcontainer" class="border p-2" style="height: 100vh;" ondrop="drop(event)"
+                        ondragover="allowDrop(event)">
 
                     </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div id="divtwo" class="border  p-2" style="height: 100vh;" ondrop="drop(event)"
+                        ondragover="allowDrop(event)"></div>
                 </div>
 
             </div>
@@ -54,15 +74,33 @@
 
 <script>
 
+    document.querySelector("#clearall").addEventListener("click", function(){
+        localStorage.removeItem("comptaskArr");
+        localStorage.removeItem("tasksArr");
+        location.reload();
+    })
+    // Completed Task
+    var completedTaskarray = JSON.parse(localStorage.getItem("comptaskArr")) || [];
+
+    completedTaskarray.forEach(function (comptask) {
+        var html = "<div draggable='true' id='card" + comptask.id + "' ondragstart='drag(event)' class='card mb-3 p-3'>";
+        html += "<p>" + comptask.task + "</p>";
+        html += "<a href='javascript:void(0)' data-id='" + comptask.id + "' class='removebtn  text-danger'>remove</a></div>";
+        document.getElementById("divtwo").innerHTML += html;
+    })
+
+    // New Task
     var tasksArray = JSON.parse(localStorage.getItem("tasksArr")) || [];
     console.log(tasksArray)
     // Display tasks when the page loads
     tasksArray.forEach(function (task) {
-        var html = "<div class='card mb-3 p-3'>";
+        var html = "<div draggable='true' id='card" + task.id + "' ondragstart='drag(event)' class='card mb-3 p-3'>";
         html += "<p>" + task.task + "</p>";
         html += "<a href='javascript:void(0)' data-id='" + task.id + "' class='removebtn  text-danger'>remove</a></div>";
         document.getElementById("taskcontainer").innerHTML += html;
     });
+
+    // Remove task
 
     var buttonsremove = document.querySelectorAll(".removebtn");
     buttonsremove.forEach(el => {
@@ -77,8 +115,56 @@
                 localStorage.setItem("tasksArr", JSON.stringify(tasksArray));
                 el.parentNode.remove();
             }
+
+            else {
+                var indexToRemove = completedTaskarray.findIndex(task => task.id === parseInt(el.getAttribute("data-id")));
+                if (indexToRemove !== -1) {
+
+                    completedTaskarray.splice(indexToRemove, 1);
+                    localStorage.setItem("comptaskArr", JSON.stringify(completedTaskarray));
+                    el.parentNode.remove();
+                }
+            }
+
         })
     })
+
+    function drag(event) {
+        console.log(event.target.id);
+        event.dataTransfer.setData("text", event.target.id);
+
+    }
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drop(ev) {
+
+        ev.preventDefault();
+        var data = ev.dataTransfer.getData("text");
+        // console.log(data.replace("card", ""));
+        ev.target.appendChild(document.getElementById(data));
+        var indexToRemove = tasksArray.findIndex(task => task.id === parseInt(data.replace("card", "")));
+        // console.log(tasksArray[indexToRemove])
+
+        if (indexToRemove !== -1) {
+            completedTaskarray.push(tasksArray[indexToRemove]);
+            localStorage.setItem("comptaskArr", JSON.stringify(completedTaskarray));
+            tasksArray.splice(indexToRemove, 1);
+            localStorage.setItem("tasksArr", JSON.stringify(tasksArray));
+        }
+        else {
+            var indexToRemove = completedTaskarray.findIndex(task => task.id === parseInt(data.replace("card", "")));
+            if (indexToRemove !== -1) {
+                tasksArray.push(completedTaskarray[indexToRemove]);
+                localStorage.setItem("tasksArr", JSON.stringify(tasksArray));
+                completedTaskarray.splice(indexToRemove, 1);
+                localStorage.setItem("comptaskArr", JSON.stringify(completedTaskarray));
+            }
+        }
+
+    }
 
 
     document.getElementById("savetask").addEventListener("click", function (e) {
@@ -89,11 +175,16 @@
 
         var takVal = document.getElementById("task").value;
 
+        if (!takVal) {
+            alert("Please Fill The task");
+            return false;
+        }
+
         myobj = {
             id: Math.floor((Math.random() * 100) + 1),
             task: takVal
         }
-
+        // console.log(myobj);
         tasksArray.push(myobj);
 
         localStorage.setItem("tasksArr", JSON.stringify(tasksArray));
@@ -101,7 +192,7 @@
         var html = "";
         tasksArray.forEach(function (taskfd) {
             // console.log(taskfd)
-            html += "<div class='card mb-3 p-3'>";
+            html += "<div draggable='true' id='card" + taskfd.id + "' ondragstart='drag(event)' class='card mb-3 p-3'>";
             html += "<p>" + taskfd.task + "</p>";
             html += "<a href='javascript:void(0)' data-id='" + taskfd.id + "' class='removebtn text-danger'>remove</a></div>";
 
@@ -125,6 +216,23 @@
                 }
             })
         })
+
+        function drag(event) {
+            console.log(event.target.id);
+            event.dataTransfer.setData("text", event.target.id);
+
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            var data = ev.dataTransfer.getData("text");
+            console.log(data + "Drop");
+            ev.target.appendChild(document.getElementById(data));
+        }
 
     })
 
